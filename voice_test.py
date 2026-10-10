@@ -1,49 +1,24 @@
 import speech_recognition as sr
-import sounddevice as sd
-
-SAMPLE_RATE = 16000
-RECORD_SECONDS = 5
-
-# Philips microphone
-MICROPHONE = 1
-
-print("================================")
-print("   AI ROBOT COMMANDER - VOICE")
-print("================================")
-print()
-print("🎤 Philips microphone selected.")
-print("🎤 Speak your command now...")
-
-audio_data = sd.rec(
-    int(RECORD_SECONDS * SAMPLE_RATE),
-    samplerate=SAMPLE_RATE,
-    channels=1,
-    dtype="int16",
-    device=MICROPHONE
-)
-
-sd.wait()
-
-print("🧠 Understanding your command...")
-
-audio = sr.AudioData(
-    audio_data.tobytes(),
-    SAMPLE_RATE,
-    2
-)
 
 recognizer = sr.Recognizer()
 
-try:
-    command = recognizer.recognize_google(audio)
+with sr.Microphone() as source:
+    print("Adjusting for background noise...")
+    recognizer.adjust_for_ambient_noise(source, duration=1)
 
-    print()
-    print("✅ YOU SAID:")
-    print(command)
-    print()
+    print("Speak your command...")
+    audio = recognizer.listen(source, timeout=10, phrase_time_limit=5)
+
+try:
+    text = recognizer.recognize_google(audio)
+    print("You said:", text)
 
 except sr.UnknownValueError:
-    print("❌ I couldn't understand the command.")
+    print("Sorry, I could not understand the voice.")
 
 except sr.RequestError as e:
-    print("❌ Internet/speech service error:", e)
+    print("Speech recognition service error:", e)
+
+except Exception as e:
+    print("Error:", e)
+    
